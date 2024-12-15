@@ -1,5 +1,5 @@
 import { BattleSceneEventType, CandyUpgradeNotificationChangedEvent } from "#app/events/battle-scene";
-import { pokemonPrevolutions } from "#app/data/balance/pokemon-evolutions";
+import { pokemonPrevolutions, allPokemonEvolutions } from "#app/data/balance/pokemon-evolutions";
 import { Variant, getVariantTint, getVariantIcon } from "#app/data/variant";
 import { argbFromRgba } from "@material/material-color-utilities";
 import i18next from "i18next";
@@ -16,6 +16,7 @@ import { LevelMoves, pokemonFormLevelMoves, pokemonSpeciesLevelMoves } from "#ap
 import PokemonSpecies, { allSpecies, getPokemonSpeciesForm, getPokerusStarters } from "#app/data/pokemon-species";
 import { getStarterValueFriendshipCap, speciesStarterCosts, POKERUS_STARTER_COUNT } from "#app/data/balance/starters";
 import { starterPassiveAbilities } from "#app/data/balance/passives";
+import { catchableSpecies } from "#app/data/balance/biomes";
 import { Type } from "#enums/type";
 import { GameModes } from "#app/game-mode";
 import { AbilityAttr, DexAttr, DexAttrProps, DexEntry, StarterMoveset, StarterAttributes, StarterPreferences, StarterPrefs } from "#app/system/game-data";
@@ -51,6 +52,7 @@ import { getPassiveCandyCount, getValueReductionCandyCounts, getSameSpeciesEggCa
 import { BooleanHolder, capitalizeString, fixedInt, getLocalizedSpriteKey, isNullOrUndefined, NumberHolder, padInt, randIntRange, rgbHexToRgba, toReadableString } from "#app/utils";
 import type { Nature } from "#enums/nature";
 import { PLAYER_PARTY_MAX_SIZE } from "#app/constants";
+import { Biome } from "#enums/biome";
 
 export type StarterSelectCallback = (starters: Starter[]) => void;
 
@@ -402,6 +404,15 @@ export default class StarterSelectUiHandler extends MessageUiHandler {
       typeOptions.push(new DropDownOption(this.scene, index, new DropDownLabel("", typeSprite)));
     });
     this.filterBar.addFilter(DropDownColumn.TYPES, i18next.t("filterBar:typeFilter"), new DropDown(this.scene, 0, 0, typeOptions, this.updateStarters, DropDownType.HYBRID, 0.5));
+
+    // biome filter. Making an entry in the dropdown for each biome
+    const biomeOptions = Object.values(Biome)
+      .filter((value) => typeof value === "number") // Filter numeric values from the enum
+      .map((biomeValue, index) =>
+        new DropDownOption(this.scene, index, new DropDownLabel(i18next.t(`biome:${Biome[biomeValue].toUpperCase()}`)))
+      );
+    const biomeDropDown: DropDown = new DropDown(this.scene, 0, 0, biomeOptions, this.updateStarters, DropDownType.HYBRID);
+    this.filterBar.addFilter(DropDownColumn.BIOME, i18next.t("filterBar:biomeFilter"), biomeDropDown);
 
     // caught filter
     const shiny1Sprite = this.scene.add.sprite(0, 0, "shiny_icons");
@@ -2429,6 +2440,27 @@ export default class StarterSelectUiHandler extends MessageUiHandler {
       // Type filter
       const fitsType =  this.filterBar.getVals(DropDownColumn.TYPES).some(type => container.species.isOfType((type as number) - 1));
 
+      // Biome filter
+      const indexToBiome = new Map(
+        Object.values(Biome)
+          .filter((value) => typeof value === "number")
+          .map((value, index) => [ index, value ])
+      );
+
+      const biomes = catchableSpecies[container.species.speciesId];
+      const allEvolutionKeys = Object.keys(allPokemonEvolutions);
+      // For some reason, allEvolutionKeys is a String[] even though declared as integer in pokemon-evolutions.ts
+      // This part allows to check if evolutions appear in different biomes compared to the base starter.
+      if (allEvolutionKeys.includes(container.species.speciesId.toString())) {
+        const allEvolutions = allPokemonEvolutions[container.species.speciesId];
+        allEvolutions.forEach(sp => {
+          catchableSpecies[sp].forEach(b => {
+            biomes.add(b);
+          });
+        });
+      }
+      const fitsBiome = this.filterBar.getVals(DropDownColumn.BIOME).some((item) => biomes.has(indexToBiome.get(item)));
+
       // Caught / Shiny filter
       const isNonShinyCaught = !!(caughtAttr & DexAttr.NON_SHINY);
       const isShinyCaught = !!(caughtAttr & DexAttr.SHINY);
@@ -2544,7 +2576,7 @@ export default class StarterSelectUiHandler extends MessageUiHandler {
         }
       });
 
-      if (fitsGen && fitsType && fitsCaught && fitsPassive && fitsCostReduction && fitsFavorite && fitsWin && fitsHA && fitsEgg && fitsPokerus) {
+      if (fitsGen && fitsBiome && fitsType && fitsCaught && fitsPassive && fitsCostReduction && fitsFavorite && fitsWin && fitsHA && fitsEgg && fitsPokerus) {
         this.filteredStarterContainers.push(container);
       }
     });
