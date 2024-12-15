@@ -85,6 +85,14 @@ export enum BiomePoolTier {
 
 export const uncatchableSpecies: Species[] = [];
 
+export interface CatchableSpecies{
+  [key: integer]: Set<integer>
+}
+
+export const catchableSpecies = {
+};
+
+
 export interface SpeciesTree {
   [key: integer]: Species[]
 }
@@ -7715,6 +7723,10 @@ export function initBiomes() {
       uncatchableSpecies.push(speciesId);
     }
 
+    // prepares new array in catchableSpecies to host available biomes
+    //TODO: this must be improved to only make arrays for starters
+    catchableSpecies[speciesId] = new Set();
+
     for (const b of biomeEntries) {
       const biome = b[0];
       const tier = b[1];
@@ -7723,6 +7735,8 @@ export function initBiomes() {
           ? b[2]
           : [ b[2] ]
         : [ TimeOfDay.ALL ];
+
+      catchableSpecies[speciesId].add(biome);
 
       for (const tod of timesOfDay) {
         if (!biomePokemonPools.hasOwnProperty(biome) || !biomePokemonPools[biome].hasOwnProperty(tier) || !biomePokemonPools[biome][tier].hasOwnProperty(tod)) {
@@ -7760,6 +7774,8 @@ export function initBiomes() {
         }
       }
     }
+
+    console.log(catchableSpecies);
   }
 
   for (const b of Object.keys(biomePokemonPools)) {
