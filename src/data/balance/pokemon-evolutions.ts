@@ -1689,4 +1689,37 @@ export function initPokemonPrevolutions(): void {
       pokemonPrevolutions[ev.speciesId] = parseInt(pk) as Species;
     }
   });
+  console.log("prevolutions", pokemonPrevolutions);
+}
+
+
+// List of all mons down a certain evolution line. Useful to collect information from a given starter.
+// TODO: clear up some confusion between using strings or integers as keys and how that affects the code.
+interface AllPokemonEvolutions {
+  [key: integer]: Species[]
+}
+
+export const allPokemonEvolutions: AllPokemonEvolutions = {};
+
+export function initAllPokemonEvolutions(): void {
+  const allEvolutionKeys = Object.keys(pokemonEvolutions);
+
+  // First run: set each evolution set to the first layer of evolutions
+  allEvolutionKeys.forEach(pk => {
+    const evolutions = pokemonEvolutions[pk];
+    allPokemonEvolutions[pk] = [];
+    for (const ev of evolutions) {
+      allPokemonEvolutions[pk].push(ev.speciesId);
+    }
+  });
+  // Second run: go further
+  allEvolutionKeys.forEach(pk => {
+    const allevolutions = allPokemonEvolutions[pk];
+    allevolutions.forEach(species => {
+      // .forEach returns the species as an integer, so we convert to a string
+      if (allEvolutionKeys.includes(species.toString())) {
+        allPokemonEvolutions[species].forEach(item => allPokemonEvolutions[pk].push(item));
+      }
+    });
+  });
 }
