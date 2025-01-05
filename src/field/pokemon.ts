@@ -115,6 +115,7 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
   public metWave: number;
   public luck: integer;
   public pauseEvolutions: boolean;
+  public pauseFormChanges: boolean;
   public pokerus: boolean;
   public switchOutStatus: boolean;
   public evoCounter: integer;
@@ -214,6 +215,7 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       this.metSpecies = dataSource.metSpecies ?? (this.metBiome !== -1 ? this.species.speciesId : this.species.getRootSpeciesId(true));
       this.metWave = dataSource.metWave ?? (this.metBiome === -1 ? -1 : 0);
       this.pauseEvolutions = dataSource.pauseEvolutions;
+      this.pauseFormChanges = dataSource.pauseFormChanges;
       this.pokerus = !!dataSource.pokerus;
       this.evoCounter = dataSource.evoCounter ?? 0;
       this.fusionSpecies = dataSource.fusionSpecies instanceof PokemonSpecies ? dataSource.fusionSpecies : dataSource.fusionSpecies ? getPokemonSpecies(dataSource.fusionSpecies) : null;
@@ -4521,6 +4523,7 @@ export class PlayerPokemon extends Pokemon {
 
   changeForm(formChange: SpeciesFormChange): Promise<void> {
     return new Promise(resolve => {
+      this.pauseFormChanges = false;
       const previousFormIndex = this.formIndex;
       this.formIndex = Math.max(this.species.forms.findIndex(f => f.formKey === formChange.formKey), 0);
       this.generateName();
@@ -4587,6 +4590,9 @@ export class PlayerPokemon extends Pokemon {
       this.fusionCustomPokemonData = pokemon.customPokemonData;
       if ((pokemon.pauseEvolutions) || (this.pauseEvolutions)) {
         this.pauseEvolutions = true;
+      }
+      if ((pokemon.pauseFormChanges) || (this.pauseFormChanges)) {
+        this.pauseFormChanges = true;
       }
 
       this.scene.validateAchv(achvs.SPLICE);

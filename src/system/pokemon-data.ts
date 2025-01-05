@@ -42,6 +42,7 @@ export default class PokemonData {
   public metWave: number;            // 0 for unknown (previous saves), -1 for starters
   public luck: integer;
   public pauseEvolutions: boolean;
+  public pauseFormChanges: boolean;
   public pokerus: boolean;
   public usedTMs: Moves[];
   public evoCounter: integer;
@@ -100,6 +101,7 @@ export default class PokemonData {
     this.luck = source.luck !== undefined ? source.luck : (source.shiny ? (source.variant + 1) : 0);
     if (!forHistory) {
       this.pauseEvolutions = !!source.pauseEvolutions;
+      this.pauseFormChanges = !!source.pauseFormChanges;
       this.evoCounter = source.evoCounter ?? 0;
     }
     this.pokerus = !!source.pokerus;

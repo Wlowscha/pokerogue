@@ -15,6 +15,8 @@ import { StatusEffect } from "#enums/status-effect";
 import { TimeOfDay } from "#enums/time-of-day";
 import { VariantTier } from "#enums/variant-tier";
 import { WeatherType } from "#enums/weather-type";
+//import { EvolutionItem } from "./data/balance/pokemon-evolutions";
+import { FormChangeItem } from "./data/pokemon-forms";
 
 /**
  * Overrides that are using when testing different in game situations
@@ -31,7 +33,10 @@ import { WeatherType } from "#enums/weather-type";
  * }
  * ```
  */
-const overrides = {} satisfies Partial<InstanceType<typeof DefaultOverrides>>;
+const overrides = {
+  ITEM_REWARD_OVERRIDE: [{ name: "FORM_CHANGE_ITEM", type: FormChangeItem.ICY_REINS_OF_UNITY }, { name: "FORM_CHANGE_ITEM", type: FormChangeItem.SHADOW_REINS_OF_UNITY }]
+//  ITEM_REWARD_OVERRIDE: [{name: "EVOLUTION_ITEM", type: EvolutionItem.THUNDER_STONE}]
+} satisfies Partial<InstanceType<typeof DefaultOverrides>>;
 
 /**
  * If you need to add Overrides values for local testing do that inside {@linkcode overrides}

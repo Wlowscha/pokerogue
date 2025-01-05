@@ -12,7 +12,7 @@ import { StatusEffect } from "#enums/status-effect";
 import PokemonIconAnimHandler, { PokemonIconAnimMode } from "#app/ui/pokemon-icon-anim-handler";
 import { pokemonEvolutions } from "#app/data/balance/pokemon-evolutions";
 import { addWindow } from "#app/ui/ui-theme";
-import { SpeciesFormChangeItemTrigger, FormChangeItem } from "#app/data/pokemon-forms";
+import { SpeciesFormChangeItemTrigger, FormChangeItem, pokemonFormChanges } from "#app/data/pokemon-forms";
 import { getVariantTint } from "#app/data/variant";
 import { Button } from "#enums/buttons";
 import { applyChallenges, ChallengeType } from "#app/data/challenge";
@@ -20,7 +20,6 @@ import MoveInfoOverlay from "#app/ui/move-info-overlay";
 import i18next from "i18next";
 import BBCodeText from "phaser3-rex-plugins/plugins/bbcodetext";
 import { Moves } from "#enums/moves";
-import { Species } from "#enums/species";
 import { getPokemonNameWithAffix } from "#app/messages";
 import { CommandPhase } from "#app/phases/command-phase";
 import { SelectModifierPhase } from "#app/phases/select-modifier-phase";
@@ -108,6 +107,7 @@ export enum PartyOption {
   TRANSFER,
   SUMMARY,
   UNPAUSE_EVOLUTION,
+  UNPAUSE_FORM_CHANGE,
   SPLICE,
   UNSPLICE,
   RELEASE,
@@ -216,7 +216,7 @@ export default class PartyUiHandler extends MessageUiHandler {
 
   public static NoEffectMessage = i18next.t("partyUiHandler:anyEffect");
 
-  private localizedOptions = [ PartyOption.SEND_OUT, PartyOption.SUMMARY, PartyOption.CANCEL, PartyOption.APPLY, PartyOption.RELEASE, PartyOption.TEACH, PartyOption.SPLICE, PartyOption.UNSPLICE, PartyOption.REVIVE, PartyOption.TRANSFER, PartyOption.UNPAUSE_EVOLUTION, PartyOption.PASS_BATON, PartyOption.RENAME, PartyOption.SELECT ];
+  private localizedOptions = [ PartyOption.SEND_OUT, PartyOption.SUMMARY, PartyOption.CANCEL, PartyOption.APPLY, PartyOption.RELEASE, PartyOption.TEACH, PartyOption.SPLICE, PartyOption.UNSPLICE, PartyOption.REVIVE, PartyOption.TRANSFER, PartyOption.UNPAUSE_EVOLUTION, PartyOption.UNPAUSE_FORM_CHANGE, PartyOption.PASS_BATON, PartyOption.RENAME, PartyOption.SELECT ];
 
   constructor(scene: BattleScene) {
     super(scene, Mode.PARTY);
@@ -395,7 +395,7 @@ export default class PartyUiHandler extends MessageUiHandler {
           }
           ui.playSelect();
           return true;
-        } else if ((option !== PartyOption.SUMMARY && option !== PartyOption.UNPAUSE_EVOLUTION && option !== PartyOption.UNSPLICE && option !== PartyOption.RELEASE && option !== PartyOption.CANCEL && option !== PartyOption.RENAME)
+        } else if ((option !== PartyOption.SUMMARY && option !== PartyOption.UNPAUSE_EVOLUTION && option !== PartyOption.UNPAUSE_FORM_CHANGE && option !== PartyOption.UNSPLICE && option !== PartyOption.RELEASE && option !== PartyOption.CANCEL && option !== PartyOption.RENAME)
           || (option === PartyOption.RELEASE && this.partyUiMode === PartyUiMode.RELEASE)) {
           let filterResult: string | null;
           const getTransferrableItemsFromPokemon = (pokemon: PlayerPokemon) =>
@@ -469,6 +469,11 @@ export default class PartyUiHandler extends MessageUiHandler {
           ui.playSelect();
           pokemon.pauseEvolutions = !pokemon.pauseEvolutions;
           this.showText(i18next.t(pokemon.pauseEvolutions ? "partyUiHandler:pausedEvolutions" : "partyUiHandler:unpausedEvolutions", { pokemonName: getPokemonNameWithAffix(pokemon) }), undefined, () => this.showText("", 0), null, true);
+        } else if (option === PartyOption.UNPAUSE_FORM_CHANGE) {
+          this.clearOptions();
+          ui.playSelect();
+          pokemon.pauseFormChanges = !pokemon.pauseFormChanges;
+          this.showText(i18next.t(pokemon.pauseFormChanges ? "partyUiHandler:pausedFormChanges" : "partyUiHandler:unpausedFormChanges", { pokemonName: getPokemonNameWithAffix(pokemon) }), undefined, () => this.showText("", 0), null, true);
         } else if (option === PartyOption.UNSPLICE) {
           this.clearOptions();
           ui.playSelect();
@@ -896,6 +901,10 @@ export default class PartyUiHandler extends MessageUiHandler {
         this.options.push(PartyOption.UNPAUSE_EVOLUTION);
       }
 
+      if ((pokemonFormChanges.hasOwnProperty(pokemon.species.speciesId) || (pokemon.isFusion() && pokemon.fusionSpecies && pokemonFormChanges.hasOwnProperty(pokemon.fusionSpecies.speciesId)))) {
+        this.options.push(PartyOption.UNPAUSE_FORM_CHANGE);
+      }
+
       if (this.partyUiMode === PartyUiMode.SWITCH) {
         if (pokemon.isFusion()) {
           this.options.push(PartyOption.UNSPLICE);
@@ -981,6 +990,8 @@ export default class PartyUiHandler extends MessageUiHandler {
               optionName = `${modifier.active ? i18next.t("partyUiHandler:DEACTIVATE") : i18next.t("partyUiHandler:ACTIVATE")} ${modifier.type.name}`;
             } else if (option === PartyOption.UNPAUSE_EVOLUTION) {
               optionName = `${pokemon.pauseEvolutions ? i18next.t("partyUiHandler:UNPAUSE_EVOLUTION") : i18next.t("partyUiHandler:PAUSE_EVOLUTION")}`;
+            } else if (option === PartyOption.UNPAUSE_FORM_CHANGE) {
+              optionName = `${pokemon.pauseFormChanges ? i18next.t("partyUiHandler:UNPAUSE_FORM_CHANGE") : i18next.t("partyUiHandler:PAUSE_FORM_CHANGE")}`;
             } else {
               if (this.localizedOptions.includes(option)) {
                 optionName = i18next.t(`partyUiHandler:${PartyOption[option]}`);
@@ -1109,10 +1120,7 @@ export default class PartyUiHandler extends MessageUiHandler {
       // ULTRANECROZIUM_Z is active and deactivating it should be the only option
       return ultraNecrozmaModifiers;
     }
-    if (formChangeItemModifiers.find(m => m.active)) {
-      // a form is currently active. the user has to disable the form or activate ULTRANECROZIUM_Z
-      formChangeItemModifiers = formChangeItemModifiers.filter(m => m.active || m.formChangeItem === FormChangeItem.ULTRANECROZIUM_Z);
-    } else if (pokemon.species.speciesId === Species.NECROZMA) {
+    if (!formChangeItemModifiers.find(m => m.active)) {
       // no form is currently active. the user has to activate some form, except ULTRANECROZIUM_Z
       formChangeItemModifiers = formChangeItemModifiers.filter(m => m.formChangeItem !== FormChangeItem.ULTRANECROZIUM_Z);
     }

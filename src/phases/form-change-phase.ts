@@ -10,6 +10,7 @@ import { EndEvolutionPhase } from "./end-evolution-phase";
 import { EvolutionPhase } from "./evolution-phase";
 import { BattlerTagType } from "#app/enums/battler-tag-type";
 import { SpeciesFormKey } from "#enums/species-form-key";
+import i18next from "i18next";
 
 export class FormChangePhase extends EvolutionPhase {
   private formChange: SpeciesFormChange;
@@ -142,6 +143,23 @@ export class FormChangePhase extends EvolutionPhase {
                                           transformedPokemon.destroy();
                                           this.scene.ui.showText(getSpeciesFormChangeMessage(this.pokemon, this.formChange, preName), null, () => this.end(), null, true, Utils.fixedInt(delay));
                                           this.scene.time.delayedCall(Utils.fixedInt(delay + 250), () => this.scene.playBgm());
+
+                                          this.scene.ui.showText(i18next.t("menu:pauseFormChangesQuestion", { pokemonName: this.pokemon.name }), null, () => {
+                                            const end = () => {
+                                              this.scene.ui.showText("", 0);
+                                              this.scene.playBgm();
+                                              this.end();
+                                            };
+                                            this.scene.ui.setOverlayMode(Mode.CONFIRM, () => {
+                                              this.scene.ui.revertMode();
+                                              this.pokemon.pauseFormChanges = true;
+                                              this.scene.ui.showText(i18next.t("menu:formChangesPaused", { pokemonName: this.pokemon.name }), null, end, 3000);
+                                            }, () => {
+                                              this.scene.ui.revertMode();
+                                              this.scene.time.delayedCall(3000, end);
+                                            });
+                                          });
+
                                         });
                                       });
                                     }
