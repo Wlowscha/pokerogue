@@ -1245,7 +1245,12 @@ export function checkStarterValidForChallenge(species: PokemonSpecies, props: De
       pokemonEvolutions[checking].forEach(e => {
         // Form check to deal with cases such as Basculin -> Basculegion
         // TODO: does this miss anything if checking forms of a stage 2 Pokémon?
-        if (!e?.preFormKey || e.preFormKey === species.forms[props.formIndex].formKey) {
+        // TODO: I just introduced an extra check solely as a patch for the bug of Pichu
+        // unlocking unexisting forms. Once that is taken care of this can probably be reverted.
+        if (
+          !e?.preFormKey ||
+          (props.formIndex in species.forms && e.preFormKey === species.forms[props.formIndex].formKey)
+        ) {
           speciesToCheck.push(e.speciesId);
         }
       });
