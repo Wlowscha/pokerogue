@@ -259,6 +259,7 @@ import { MoveFlags } from "#enums/MoveFlags";
 import { timedEventManager } from "#app/global-event-manager";
 import { loadMoveAnimations } from "#app/sprites/pokemon-asset-loader";
 import { ResetStatusPhase } from "#app/phases/reset-status-phase";
+import { PokemonItemManager } from "./pokemon-held-item-manager";
 
 export enum LearnMoveSituation {
   MISC,
@@ -386,6 +387,8 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
   public usedTMs: Moves[];
 
   private shinySparkle: Phaser.GameObjects.Sprite;
+
+  public heldItemManager: PokemonItemManager;
 
   // TODO: Rework this eventually
   constructor(
@@ -535,6 +538,9 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
     if (!dataSource) {
       this.calculateStats();
     }
+
+    //TODO: If the pokémon is cloned or whatever, this will need to be different
+    this.heldItemManager = new PokemonItemManager();
   }
 
   /**
