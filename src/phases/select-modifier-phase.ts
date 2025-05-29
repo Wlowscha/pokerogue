@@ -9,6 +9,7 @@ import {
   RememberMoveModifierType,
   PokemonPpRestoreModifierType,
   PokemonPpUpModifierType,
+  PokemonHeldItemReward,
 } from "#app/modifier/modifier-type";
 import {
   regenerateModifierPoolThresholds,
@@ -156,6 +157,9 @@ export class SelectModifierPhase extends BattlePhase {
   private applyChosenModifier(modifierType: ModifierType, cost: number, modifierSelectCallback): boolean {
     if (modifierType! instanceof PokemonModifierType) {
       //TODO: is the bang correct?
+      if (modifierType instanceof PokemonHeldItemReward) {
+        this.openGiveHeldItemMenu(modifierType, modifierSelectCallback);
+      }
       if (modifierType instanceof FusePokemonModifierType) {
         this.openFusionMenu(modifierType, cost, modifierSelectCallback);
       } else {
@@ -341,6 +345,26 @@ export class SelectModifierPhase extends BattlePhase {
         : undefined,
       tmMoveId,
       isPpRestoreModifier,
+    );
+  }
+
+  private openGiveHeldItemMenu(reward, modifierSelectCallback) {
+    const party = globalScene.getPlayerParty();
+    const partyUiMode = PartyUiMode.MODIFIER;
+    globalScene.ui.setModeWithoutClear(
+      UiMode.PARTY,
+      partyUiMode,
+      -1,
+      (slotIndex: number, _option: PartyOption) => {
+        if (slotIndex < 6) {
+          globalScene.ui.setMode(UiMode.MODIFIER_SELECT, this.isPlayer()).then(() => {
+            party[slotIndex].heldItemManager.addHeldItem(reward.itemId);
+          });
+        } else {
+          this.resetModifierSelect(modifierSelectCallback);
+        }
+      },
+      reward.selectFilter,
     );
   }
 

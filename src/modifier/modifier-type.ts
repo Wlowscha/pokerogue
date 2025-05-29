@@ -1350,7 +1350,6 @@ class AttackTypeBoosterRewardGenerator extends ModifierTypeGenerator {
   }
 }
 
-/**
 class AttackTypeBoosterModifierTypeGenerator extends ModifierTypeGenerator {
   constructor() {
     super((party: Pokemon[], pregenArgs?: any[]) => {
@@ -1407,7 +1406,7 @@ class AttackTypeBoosterModifierTypeGenerator extends ModifierTypeGenerator {
     });
   }
 }
-*/
+
 class BaseStatBoosterModifierTypeGenerator extends ModifierTypeGenerator {
   public static readonly items: Record<PermanentStat, string> = {
     [Stat.HP]: "hp_up",
@@ -2042,7 +2041,9 @@ export const modifierTypes = {
 
   BASE_STAT_BOOSTER: () => new BaseStatBoosterModifierTypeGenerator(),
 
-  ATTACK_TYPE_BOOSTER: () => new AttackTypeBoosterRewardGenerator(),
+  ATTACK_TYPE_BOOSTER_REWARD: () => new AttackTypeBoosterRewardGenerator(),
+
+  ATTACK_TYPE_BOOSTER: () => new AttackTypeBoosterModifierTypeGenerator(),
 
   MINT: () =>
     new ModifierTypeGenerator((_party: Pokemon[], pregenArgs?: any[]) => {

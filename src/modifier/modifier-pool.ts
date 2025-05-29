@@ -521,7 +521,7 @@ const modifierPool: ModifierPool = {
     ),
     new WeightedModifierType(modifierTypes.REVIVER_SEED, 4),
     new WeightedModifierType(modifierTypes.CANDY_JAR, skipInLastClassicWaveOrDefault(5)),
-    new WeightedModifierType(modifierTypes.ATTACK_TYPE_BOOSTER, 9),
+    new WeightedModifierType(modifierTypes.ATTACK_TYPE_BOOSTER_REWARD, 9),
     new WeightedModifierType(modifierTypes.TM_ULTRA, 11),
     new WeightedModifierType(modifierTypes.RARER_CANDY, 4),
     new WeightedModifierType(modifierTypes.GOLDEN_PUNCH, skipInLastClassicWaveOrDefault(2)),
