@@ -6059,7 +6059,6 @@ export class PlayerPokemon extends Pokemon {
         }
       }
       if (!globalScene.gameMode.isDaily || this.metBiome > -1) {
-        globalScene.gameData.updateSpeciesDexIvs(this.species.speciesId, this.ivs);
         globalScene.gameData.setPokemonSeen(this, false);
         globalScene.gameData.setPokemonCaught(this, false).then(() => updateAndResolve());
       } else {
