@@ -64,7 +64,7 @@ const StarterPrefers_DEFAULT: string = "{}";
 let StarterPrefers_private_latest: string = StarterPrefers_DEFAULT;
 
 export interface StarterPreferences {
-  [key: number]: StarterAttributes | undefined;
+  [key: number]: StarterAttributes;
 }
 // called on starter selection show once
 
@@ -93,8 +93,7 @@ export function saveStarterPreferences(prefs: StarterPreferences): void {
     console.warn("Refusing to save empty starter preferences");
     return;
   }
-  // no reason to store `{}` (for starters not customized)
-  const pStr: string = JSON.stringify(prefs, (_, value) => (isBareObject(value) ? undefined : value));
+  const pStr: string = JSON.stringify(prefs);
   if (pStr !== StarterPrefers_private_latest) {
     // something changed, store the update
     localStorage.setItem(`starterPrefs_${loggedInUser?.username}`, pStr);
